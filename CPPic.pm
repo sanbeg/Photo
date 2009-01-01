@@ -1,7 +1,7 @@
 package CPPic;
 
 use strict;
-use carp;
+use Carp;
 our $move;
 our $downcase=1;
 our $prefix = 'dsc';
@@ -16,13 +16,22 @@ sub freshen( $$;$ ) {
     my $dst = $self->{dst} = shift;
     $self->{from} = shift;
 
+    croak "$dst: $!" unless -d $dst;
+
+    #warn "glob=<$dst/${prefix}_*.$suffix>";
     my @glob = sort <$dst/${prefix}_*.$suffix>;
-    croak "Can't freshen $dst: no files found!" unless @glob;
     unless (defined $self->{from}) {
 	#my $start = shift @glob;
-	my $start = pop @glob;
-	$start =~ m:/${prefix}_([0-9]+)\.$suffix:;
-	$self->{from} = $1+1;
+	for (;;)  {
+	    my $start = pop @glob;
+	    croak "Can't freshen $dst: no files found!" unless defined $start;
+	    if ($start =~ m:/${prefix}_([0-9]+).*\.$suffix:) {
+		$self->{from} = $1+1;
+		last;
+	    } else {
+		warn "freshen boundary; skip file: $start";
+	    }
+	}
     }
 }
 
