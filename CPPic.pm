@@ -17,9 +17,9 @@ sub freshen( $$;$ ) {
     $self->{from} = shift;
 
     croak "$dst: $!" unless -d $dst;
+    #sort probably not needed, but would screw up badly if it was.
+    my @glob = sort <\Q$dst\E/${prefix}_*.$suffix>;
 
-    #warn "glob=<$dst/${prefix}_*.$suffix>";
-    my @glob = sort <$dst/${prefix}_*.$suffix>;
     unless (defined $self->{from}) {
 	#my $start = shift @glob;
 	for (;;)  {
