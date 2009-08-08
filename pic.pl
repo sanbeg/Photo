@@ -4,6 +4,7 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::Bin";
+use lib "$FindBin::Bin/../perl";
 use CPPic;
 
 my $freshen;
@@ -22,6 +23,11 @@ my $dst = shift;
 die "Copy to where?" unless defined $dst;
 die "too many args" if @ARGV;
 
+unless (-d $dst) {
+    mkdir $dst or die "$dst: $!";
+};
+
+
 my $pic = CPPic->new;
 
 $pic->find_cameras;
@@ -31,7 +37,11 @@ print "$_\n" for @{$pic->{folders}};
 if (defined $from) {
     $pic->freshen($dst, $from);
 } elsif (defined $freshen) {
-    $pic->freshen( ($freshen eq '') ? $dst : $freshen ) 
+    my $refresh = ($freshen eq '') ? $dst : $freshen;
+    warn "Freshening $refresh";
+    $pic->freshen( $refresh ) 
+} else {
+    $pic->freshen( $dst );
 }
 
 $pic->copy_all($dst);
