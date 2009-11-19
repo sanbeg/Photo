@@ -4,12 +4,12 @@ use strict;
 use Carp;
 our $move;
 our $downcase=1;
-our $prefix = 'dsc';
+our $prefix; # = 'dsc_';
 our $suffix = 'jpg';
 our $test;
 our $verbose=0;
 
-my $template="${prefix}_%.4i.$suffix";
+#my $template="${prefix}%.4i.$suffix";
 
 sub freshen( $$;$ ) {
     my $self = shift;
@@ -18,19 +18,44 @@ sub freshen( $$;$ ) {
 
     croak "$dst: $!" unless -d $dst;
     #sort probably not needed, but would screw up badly if it was.
-    my @glob = sort <\Q$dst\E/${prefix}_*.$suffix>;
+    my @glob = sort <\Q$dst\E/${prefix}*.$suffix>;
 
     unless (defined $self->{from}) {
 	#my $start = shift @glob;
 	for (;;)  {
 	    my $start = pop @glob;
 	    croak "Can't freshen $dst: no files found!" unless defined $start;
-	    if ($start =~ m:/${prefix}_([0-9]+).*\.$suffix:) {
+	    if ($start =~ m:/${prefix}([0-9]+).*\.$suffix:) {
 		$self->{from} = $1+1;
 		last;
 	    } else {
 		warn "freshen boundary; skip file: $start";
 	    }
+	}
+    }
+}
+
+sub init_src ($) {
+    my $self = shift;
+
+    unless (defined $prefix) {
+	my %candidates;
+	foreach my $src (@{$self->{folders}}) {
+	    opendir my($dh), $src or die "$src: $!";
+	    
+	    while (my $file = readdir($dh)) {
+		if ($file =~ m/(.+?)[0-9]+\.$suffix/i) {
+		    #warn "prefix=$1" if $verbose>2;
+		    $candidates{$1} ++;
+		}
+	    }
+	    closedir $dh;
+	}
+	my @c = keys %candidates;
+	if (@c > 1) {
+	    die "Multiple prefixes found: " . join (", ", @c);
+	} else {
+	    $prefix = $downcase? lc($c[0]) : $c[0];
 	}
     }
 }
@@ -61,6 +86,7 @@ sub _copy ( $$ ) {
 
 
 sub copy_range( $$;$ ) {
+    my $template="${prefix}%.4i.$suffix";
     my $self = shift;
     my ($to,$from) = ($self->{to}, $self->{from});
     my ($src,$dst) = @_;
@@ -69,31 +95,36 @@ sub copy_range( $$;$ ) {
     $self->{copied} = [];
 
     unless (defined($to) and defined($from)) {
-	#my @glob = sort <$src/${prefix}_*.$suffix>;
+	#my @glob = sort <$src/${prefix}*.$suffix>;
+
+	my $prefix = $downcase ? uc($prefix) : $prefix;
+	my $suffix = $suffix ? uc($suffix) : $suffix;
+
 	
 	my @glob;
-	my $dh;
-	opendir $dh, $src or die "$src: $!";
-	@glob = sort grep {m/^${prefix}_.+\.$suffix$/i} readdir($dh);
+	opendir my($dh), $src or die "$src: $!";
+	@glob = sort grep {m/^${prefix}.+\.$suffix$/i} readdir($dh);
 	closedir $dh;
 
 	die "No photos found in $src" unless @glob;
 	unless (defined $to) {
 	    my $end = $glob[$#glob];
 	    #warn "$end => ${prefix}_([0-9]+)\.$suffix";
-	    $end =~ m:${prefix}_([0-9]+)\.$suffix:i;
+	    $end =~ m:${prefix}([0-9]+)\.$suffix:i;
 	    $to = $1;
 	    die "Where does it end?" unless defined $to;
 	};
+	#tis may be broken, should just call freshen()?
 	unless (defined $from) {
 	    my $start = $glob[0];
-	    $start =~ m:${prefix}_([0-9]+)\.$suffix:;
+	    $start =~ m:${prefix}([0-9]+)\.$suffix:;
 	    $from = $1;
 	}
 	warn "copy from $from to $to\n" if $verbose;
+	die "no from $prefix $glob[0]" unless defined $from;
     };
 
-
+    die "no from" unless defined $from;
     foreach my $fileno ($from .. $to) {
 	my $file = sprintf $template, $fileno;
 #    my $srcf = "$src/$file";
