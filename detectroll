@@ -1,0 +1,15 @@
+#! /usr/bin/perl -w
+
+use strict;
+use lib '.';
+use DetectRoll;
+$DetectRoll::debug=1;
+
+my $dir = shift;
+my $dr=DetectRoll->new($dir);
+
+#print $dr->has_roll ? "yes\n" : "no\n"; exit;
+
+my ($left,$right) = $dr->find_roll;
+
+print "last image is $left; earliest is $right\n";
