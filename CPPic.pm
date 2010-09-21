@@ -2,6 +2,8 @@ package CPPic;
 
 use strict;
 use Carp;
+use File::Glob qw(:globally :nocase);
+
 our $move;
 our $downcase=1;
 our $prefix; # = 'dsc_';
@@ -19,13 +21,12 @@ sub freshen( $$;$ ) {
     croak "$dst: $!" unless -d $dst;
     #sort probably not needed, but would screw up badly if it was.
     my @glob = sort <\Q$dst\E/${prefix}*.$suffix>;
-
     unless (defined $self->{from}) {
 	#my $start = shift @glob;
 	for (;;)  {
 	    my $start = pop @glob;
 	    croak "Can't freshen $dst: no files found!" unless defined $start;
-	    if ($start =~ m:/${prefix}([0-9]+).*\.$suffix:) {
+	    if ($start =~ m:/${prefix}([0-9]+).*\.$suffix:i) {
 		$self->{from} = $1+1;
 		last;
 	    } else {
@@ -114,7 +115,7 @@ sub copy_range( $$;$ ) {
 	    $to = $1;
 	    die "Where does it end?" unless defined $to;
 	};
-	#tis may be broken, should just call freshen()?
+	#this may be broken, should just call freshen()?
 	unless (defined $from) {
 	    my $start = $glob[0];
 	    $start =~ m:${prefix}([0-9]+)\.$suffix:;
