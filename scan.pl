@@ -43,7 +43,7 @@ sub copy_timestamp( @ ) {
     foreach (@_) {
 	my @stat = stat $scan->{dir}."/$_" or die "stat $_: $!";
 	my ($at,$mt) = @stat[8,9];
-	utime $at,$mt, $scan2->{dir}."/$_" or die "utime $_: $!";
+	utime $at,$mt, $scan2->{dir}."/$_" or die "utime $scan2->{dir}/$_: $!";
     }
 }
 
