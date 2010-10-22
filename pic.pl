@@ -13,12 +13,14 @@ my $freshen;
 my ($from,$to);
 my $rotate=1;
 my $move;
-
+my @fake_camera;
 GetOptions(
     'from=i'=>\$from, 'to=i'=>\$to, 'rotate!'=>\$rotate, 
     'freshen:s'=>\$freshen, 'move!'=>\$move, 
     'test!'=>\$CPPic::test, 'verbose+'=>\$CPPic::verbose,
     'prefix=s'=>\$CPPic::prefix,
+#testing opt, local copy of camera.  Better than mount -oloop?
+    'fake=s'=>\@fake_camera, 'fakesub=s@'=> sub{push @fake_camera, <$_[1]/*>},
     );
 
 umask 033;
@@ -36,7 +38,12 @@ unless (-d $dst) {
 
 my $pic = CPPic->new;
 
-$pic->find_cameras;
+if (@fake_camera) {
+    $pic->{folders}=\@fake_camera;
+} else {
+    $pic->find_cameras;
+}
+
 $pic->init_src;
 
 my $only_last_folder;
@@ -83,10 +90,15 @@ if ($only_last_folder) {
     #exit 1;
 }
 
+
 $pic->copy_all($dst);
 
 #todo - if there's a new folder due to number rollover, that won't be copied
 #yet, so copy everything there.  If max(last_folder) < from, or last folder
 #wasn't used?
+
+#instead of last folder, find folder in range;
+#i.e. imageno(folder)<imageno(prev_folder) => last rollover point.
+#copy 
 
 $pic->rotate if $rotate;

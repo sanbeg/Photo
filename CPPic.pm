@@ -118,7 +118,7 @@ sub copy_range( $$;$ ) {
 	#this may be broken, should just call freshen()?
 	unless (defined $from) {
 	    my $start = $glob[0];
-	    $start =~ m:${prefix}([0-9]+)\.$suffix:;
+	    $start =~ m:${prefix}([0-9]+)\.$suffix:i;
 	    $from = $1;
 	}
 	warn "copy from $from to $to\n" if $verbose;
