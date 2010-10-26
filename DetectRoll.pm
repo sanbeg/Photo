@@ -56,7 +56,7 @@ sub has_roll {
     }
 };
 
-my $debug;
+our $debug;
 
 sub find_roll {
     use integer;

@@ -1,9 +1,11 @@
 #! /usr/bin/perl -w
 
 use strict;
+use Getopt::Long;
 use lib '.';
 use DetectRoll;
-$DetectRoll::debug=1;
+
+GetOptions('debug'=>\$DetectRoll::debug) or die;
 
 my $dir = shift;
 my $dr=DetectRoll->new($dir);
