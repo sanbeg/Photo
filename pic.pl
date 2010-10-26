@@ -13,12 +13,13 @@ my $freshen;
 my ($from,$to);
 my $rotate=1;
 my $move;
+my $only_last_folder;
 my @fake_camera;
 GetOptions(
     'from=i'=>\$from, 'to=i'=>\$to, 'rotate!'=>\$rotate, 
     'freshen:s'=>\$freshen, 'move!'=>\$move, 
     'test!'=>\$CPPic::test, 'verbose+'=>\$CPPic::verbose,
-    'prefix=s'=>\$CPPic::prefix,
+    'prefix=s'=>\$CPPic::prefix, 'last!'=>\$only_last_folder,
 #testing opt, local copy of camera.  Better than mount -oloop?
     'fake=s'=>\@fake_camera, 'fakesub=s@'=> sub{push @fake_camera, <$_[1]/*>},
     );
@@ -46,7 +47,6 @@ if (@fake_camera) {
 
 $pic->init_src;
 
-my $only_last_folder;
 
 if (defined $from) {
     $pic->freshen($dst, $from);
