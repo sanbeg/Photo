@@ -20,7 +20,7 @@ sub shutter_count( $$ ) {
 sub open_dir {
     my $self=$_[0];
     if (defined $self->{DH}) {
-	rewind $self->{DH};
+	rewinddir $self->{DH};
     } else {
 	opendir $self->{DH}, $self->{dir} or croak "$self->{dir}: $!";
     }
@@ -57,7 +57,7 @@ sub has_roll {
 };
 
 our $debug;
-
+my $suffix='.jpg';
 sub find_roll {
     use integer;
     &open_dir;
@@ -67,7 +67,7 @@ sub find_roll {
     my ($min,$max, $minf, $maxf);
 
     while (my $fn = readdir $self->{DH}) {
-	next unless $fn =~ /([0-9]+).*\.jpg/i;
+	next unless $fn =~ /([0-9]+).*\Q$suffix/i;
 	$filenames{int($1)} = $fn;
 	if (!defined($min) or $min > $1) {
 	    $min=$1;
