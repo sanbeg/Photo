@@ -7,65 +7,17 @@ use lib "$FindBin::Bin";
 use lib "$FindBin::Bin/../perl";
 use CPPic;
 use DetectRoll;
+use CamRoll;
 
 my $pic = CPPic->new;
 $pic->find_cameras;
 $pic->init_src;
 
-my %shutter_count;
-my %filenum;
-my %dirnum;
-foreach my $dir (@{$pic->{folders}}) {
-    print "$dir\n";
-    $dir =~ m:.+/([0-9]+): and do {
-	my $dirn=$1;
-	print "$dirn\n";
-	opendir DH, $dir or die "$dir: $!";
-	while (my $fn = readdir DH) {
-	    if ($fn =~ m/(?:$CPPic::prefix).*?([0-9]+)/i) {
-		$filenum{$dirn} = $1;
-		$dirnum{$dirn} = $dir;
-		last;
-	    }
-	}
-	closedir DH;
-    }
-}
+my ($roll,$max_r) = CamRoll::find($pic);
 
-my $max_fn=0;
-my $roll;
-foreach my $dirn (sort {$a <=> $b} keys %filenum) {
-    my $fn = $filenum{$dirn};
-    warn "$dirn $fn $max_fn";
-    if ($fn < $max_fn) {
-	warn "camera rolled @ $dirn";
-	$roll=$dirn;
-    };
-    $max_fn = $fn;
-}
-
-if (defined $roll) {
-    my @dirs;
-    while (my ($num,$name) = each %dirnum) {
-	push @dirs, $name if $num >= $roll;
-    }
-    my ($min_r, $max_r) = (9999,0);
-    foreach my $dir (@dirs) {
-	warn $dir;
-	opendir DH, $dir or die "$dir: $!";
-	while (my $fn = readdir DH) {
-	    if ($fn =~ m/(?:$CPPic::prefix).*?([0-9]+)/i) {
-		my $n = $1;
-		$min_r = $n if $n < $min_r;
-		$max_r = $n if $n > $max_r;
-	    }
-	}
-	closedir DH;
-    }
-    print "$min_r $max_r $roll\n";
 # if last photo on computer > $max_r - refresh before $roll
 # then always refresh after roll.
-
+if (defined $roll) {
     if (my $dir = shift) {
 	$pic->freshen($dir);
 
@@ -77,11 +29,13 @@ if (defined $roll) {
 
 	if ($has_roll) {
 	    print "\tlast image is $left; earliest is $right\n";
-	    print "refresh old\n" if $left > $max_r;
+	    print "refresh old\n" if $left > $max_r; #should never happen?
 	} else {
 	    print $pic->{from}, "\n";
 	    print "refresh old\n" if $pic->{from}-1 > $max_r;
 	}
     }
+
+    print "start at $roll / $max_r\n";
 }
 
