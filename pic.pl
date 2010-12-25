@@ -7,6 +7,7 @@ use lib "$FindBin::Bin";
 use lib "$FindBin::Bin/../perl";
 use CPPic;
 use DetectRoll;
+use CamRoll;
 
 my $freshen;
 #unimplemented
@@ -47,6 +48,8 @@ if (@fake_camera) {
 
 $pic->init_src;
 
+my ($roll,$maxr) = CamRoll::find($pic);
+CamRoll::kill($pic,$roll) if defined $roll;
 
 if (defined $from) {
     $pic->freshen($dst, $from);
