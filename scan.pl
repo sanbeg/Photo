@@ -81,7 +81,10 @@ if ($count_rmdir_not_empty and ! $dry_run) {
 foreach (@{$scan->{dirs}}) {
     unless (-d $scan2->{dir}."/$_") {
 	print "mkdir $_\n" if $verbose;
-	mkdir $scan2->{dir}."/$_" unless $dry_run;
+	unless ($dry_run) {
+	    mkdir $scan2->{dir}."/$_" 
+		or die "$scan2->{dir}/$_: $!";
+	}
 	push @created_dirs, $_;
     }
 }
@@ -166,7 +169,10 @@ while (my ($f,$o) = each %file_ops) {
 foreach (reverse @{$scan2->{dirs}}) {
     unless (-d $scan->{dir}."/$_") {
 	print "rmdir $_\n" if $verbose;
-	rmdir $scan2->{dir}."/$_" unless $dry_run;
+	unless ($dry_run) {
+	    rmdir $scan2->{dir}."/$_" 
+		or die "failed to remove $scan2->{dir}/$_: $!"
+	}
     }
 }
 #update directory timestamps
