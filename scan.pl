@@ -1,5 +1,8 @@
 #! /usr/bin/perl -w
 
+#TODO :  warn if sync would delete a directory with too many files.
+
+
 use strict;
 #use lib '.';
 use FindBin;
@@ -43,11 +46,36 @@ my @created_dirs;
 
 sub copy_timestamp( @ ) {
     foreach (@_) {
-	my @stat = stat $scan->{dir}."/$_" or die "stat $_: $!";
+	my @stat = stat "$scan->{dir}/$_" or die "stat $_: $!";
 	my ($at,$mt) = @stat[8,9];
-	utime $at,$mt, $scan2->{dir}."/$_" or die "utime $scan2->{dir}/$_: $!";
+	utime $at,$mt, "$scan2->{dir}/$_" or die "utime $scan2->{dir}/$_: $!";
     }
 }
+
+my $count_rmdir=0;
+my $count_rmdir_not_empty=0;
+#count  old dirs
+foreach (@{$scan2->{dirs}}) {
+    unless (-d $scan->{dir}."/$_") {
+	print "rmdir $_\n" if $verbose;
+	opendir my($dh), "$scan2->{dir}/$_" or die;
+	my $n_files=0;
+	while (my $file = readdir $dh) {
+	    ++ $n_files if -f "$scan2->{dir}/$_/$file";
+	}
+	closedir $dh;
+	if ($n_files) {
+	    print "$scan2->{dir}/$_ has $n_files files\n";
+	    $count_rmdir_not_empty ++;
+	}
+	$count_rmdir++;
+    }
+}
+
+if ($count_rmdir_not_empty and ! $dry_run) {
+    die "This would remove $count_rmdir_not_empty non-empty directories!";
+}
+
 
 #create new dirs
 foreach (@{$scan->{dirs}}) {
@@ -55,15 +83,6 @@ foreach (@{$scan->{dirs}}) {
 	print "mkdir $_\n" if $verbose;
 	mkdir $scan2->{dir}."/$_" unless $dry_run;
 	push @created_dirs, $_;
-    }
-}
-
-my $count_rmdir=0;
-#count  old dirs
-foreach (@{$scan2->{dirs}}) {
-    unless (-d $scan->{dir}."/$_") {
-	print "rmdir $_\n" if $verbose;
-	$count_rmdir++;
     }
 }
 
