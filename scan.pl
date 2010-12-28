@@ -149,11 +149,13 @@ while (my ($f,$o) = each %file_ops) {
     if (ref $o) {
 	my ($op,$arg) = @{$o};
 	die "unknown op" unless $op == $OP_MOVE;
-	move($scan2->{dir}."/$f", $scan2->{dir}."/$arg");
+	move($scan2->{dir}."/$f", $scan2->{dir}."/$arg")
+	    or die "failed to move $scan->{dir}/$f -> $scan2->{dir}/$f: $!";
     } elsif ($o == $OP_DEL) {
 	unlink $scan2->{dir}."/$f";
     } elsif ($o == $OP_ADD or $o == $OP_REPLACE) {
-	copy ($scan->{dir}."/$f", $scan2->{dir}."/$f");
+	copy ($scan->{dir}."/$f", $scan2->{dir}."/$f")
+	    or die "failed to copy $scan->{dir}/$f -> $scan2->{dir}/$f: $!";
 	copy_timestamp ($f);
     } else {
 	die  "unknown op $o $f";
