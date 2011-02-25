@@ -70,6 +70,9 @@ sub downcase( $ ) {
 
 sub _copy ( $$ ) {
     my ($src, $dst) = @_;
+    my $real_dst = $dst;
+    $dst =~ s/\.+$/.tmp/;
+
     my ($S,$D);
     open $S, $src or die "$src: $!";
     open $D, ">$dst" or die "$dst: $!";
@@ -83,6 +86,9 @@ sub _copy ( $$ ) {
     }
     close $S;
     close $D;
+    unless ($dst eq $real_dst) {
+	rename $dst, $real_dst or die "$real_dst: $!";
+    }
 }
 
 
