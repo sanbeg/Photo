@@ -27,6 +27,10 @@ while (my $image = <>) {
     foreach my $tag (@tags) {
 	my $val = $exiftool->GetValue($tag,$type);
 
+	unless (defined $val) {
+	    #warn "no lens for $image";
+	    next;
+	}
 	if ($tag eq 'Lens') {
 	    my @lens = split ' ', $val;
 	    if ($lens[0] eq $lens[1]) {
