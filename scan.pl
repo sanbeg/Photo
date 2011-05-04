@@ -5,19 +5,22 @@
 
 use strict;
 #use lib '.';
-use FindBin;
-use lib $FindBin::Bin;
-use FileLoc;
 use Data::Dumper;
 use File::Copy;
 use Getopt::Long;
+
+use FindBin;
+use lib $FindBin::Bin;
+use FileLoc;
+use DirHierLog;
 
 my $dry_run;
 my $verbose;
 my @ignore;
 my @only;
+my $do_log_dirs;
 GetOptions ('n|dry-run'=>\$dry_run, verbose=>\$verbose, 
-	    'ignore=s'=>\@ignore, 'only=s'=>\@only);
+	    'ignore=s'=>\@ignore, 'only=s'=>\@only, 'log!'=>\$do_log_dirs);
 
 my $dir = shift or die;
 my $scan=FileLoc->new($dir);
@@ -132,10 +135,25 @@ while (my($fs,$fnd) = each %{$scan2->{file_loc}}) {
     }
 }
 
+
 my @op_str = qw(nop Delete Create Update Rename);
 my @op_stats;
+my $dirlog;
+$dirlog = DirHierLog->new() if $do_log_dirs;
+delete $file_ops{'.dirlog'} if defined $dirlog;
+
 while (my ($f,$o) = each %file_ops) {
     my $op = ref($o)? $o->[0] : $o;
+
+    if ($o == $OP_ADD and 
+	defined($dirlog) and 
+	$dirlog->existed($scan2->{dir}."/$f")) 
+    {
+	warn "Not replacing lost file: $scan2->{dir}/$f";
+	delete $file_ops{$f};
+	next;
+    };
+    
     $op_stats[$op]++;
 }
 
@@ -146,24 +164,35 @@ print "Make dir: ".@created_dirs."\n";
 print "Remove dir: $count_rmdir\n";
 print "Total files: source=",$scan->{count}," destination=",$scan2->{count},"\n";
 print "----\n" if $verbose;
+
 while (my ($f,$o) = each %file_ops) {
-    print "$f : ", ref($o)?"$op_str[$$o[0]] $$o[1]":$op_str[$o], "\n" if $verbose;
+    print "$f : ", ref($o)?"$op_str[$$o[0]] $$o[1]":$op_str[$o], "\n"
+	if $verbose;
     next if $dry_run;
     if (ref $o) {
 	my ($op,$arg) = @{$o};
 	die "unknown op" unless $op == $OP_MOVE;
 	move($scan2->{dir}."/$f", $scan2->{dir}."/$arg")
 	    or die "failed to move $scan->{dir}/$f -> $scan2->{dir}/$f: $!";
+	if (defined $dirlog) {
+	    $dirlog->remove($scan2->{dir}."/$f");
+	    $dirlog->add($scan2->{dir}."/$arg");
+	}
+
     } elsif ($o == $OP_DEL) {
 	unlink $scan2->{dir}."/$f";
+	$dirlog->remove($scan2->{dir}."/$f") if defined $dirlog;
     } elsif ($o == $OP_ADD or $o == $OP_REPLACE) {
 	copy ($scan->{dir}."/$f", $scan2->{dir}."/$f")
 	    or die "failed to copy $scan->{dir}/$f -> $scan2->{dir}/$f: $!";
 	copy_timestamp ($f);
+	$dirlog->add($scan2->{dir}."/$f") if defined $dirlog;
     } else {
 	die  "unknown op $o $f";
     }
 }
+
+$dirlog->write() if defined $dirlog;
 
 #rm old dirs
 foreach (reverse @{$scan2->{dirs}}) {
