@@ -9,16 +9,14 @@ use CPPic;
 use DetectRoll;
 use CamRoll;
 
-my $freshen;
 #unimplemented
-my ($from,$to);
-my $rotate=1;
 my $move;
 my $only_last_folder;
 my @fake_camera;
+my %opt = (fresh=>1, rotate=>1);
 GetOptions(
-    'from=i'=>\$from, 'to=i'=>\$to, 'rotate!'=>\$rotate, 
-    'freshen:s'=>\$freshen, 'move!'=>\$move, 
+    \%opt,
+    'from=i', 'rotate!'=>, 'freshen!', 'move!'=>\$move, 
     'test!'=>\$CPPic::test, 'verbose+'=>\$CPPic::verbose,
     'prefix=s'=>\$CPPic::prefix, 'last!'=>\$only_last_folder,
 #testing opt, local copy of camera.  Better than mount -oloop?
@@ -29,12 +27,14 @@ umask 033;
 
 my $dst = shift;
 die "Copy to where?" unless defined $dst;
+my $freshen=shift;
 die "too many args" if @ARGV;
 
-my $do_fresh=1;
+
+
 unless (-d $dst) {
     mkdir $dst or die "$dst: $!";
-    $do_fresh=0;
+    $opt{fresh}=0;
 };
 
 
@@ -51,8 +51,8 @@ $pic->init_src;
 my ($roll,$maxr) = CamRoll::find($pic);
 CamRoll::kill($pic,$roll) if defined $roll;
 
-if (defined $from) {
-    $pic->freshen($dst, $from);
+if (defined $opt{from}) {
+    $pic->freshen($dst, $opt{from});
 } elsif (defined $freshen) {
     my $refresh = ($freshen eq '') ? $dst : $freshen;
     warn "Freshening $refresh";
@@ -68,7 +68,7 @@ if (defined $from) {
 	$pic->{to} = $right-1;
 	$only_last_folder=1;
     }
-} elsif ($do_fresh) {
+} elsif ($opt{fresh}) {
     $pic->freshen( $dst );
 }
 
@@ -104,4 +104,4 @@ $pic->copy_all($dst);
 #i.e. imageno(folder)<imageno(prev_folder) => last rollover point.
 #copy 
 
-$pic->rotate if $rotate;
+$pic->rotate if $opt{rotate};
