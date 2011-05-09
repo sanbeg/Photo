@@ -58,6 +58,7 @@ sub has_roll {
 
 our $debug;
 my $suffix='.jpg';
+
 sub find_roll {
     use integer;
     &open_dir;
@@ -89,6 +90,8 @@ sub find_roll {
 	++ $right while $right <= $max and ! exists $filenames{$right};
 
 	warn "compare $min $left $mid $right $max" if $debug;
+	warn "$minf $maxf" if $debug;
+	warn "$filenames{$left} $filenames{$right}" if $debug;
 	if ($self->shutter_count($filenames{$right}) >
 	    $self->shutter_count($minf)) {
 	    if ($mid == $max) {

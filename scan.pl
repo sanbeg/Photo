@@ -139,8 +139,12 @@ while (my($fs,$fnd) = each %{$scan2->{file_loc}}) {
 my @op_str = qw(nop Delete Create Update Rename);
 my @op_stats;
 my $dirlog;
-$dirlog = DirHierLog->new() if $do_log_dirs;
-delete $file_ops{'.dirlog'} if defined $dirlog;
+
+if ($do_log_dirs) {
+    warn "logging";
+    $dirlog = DirHierLog->new() or die; 
+    delete $file_ops{'.dirlog'} if defined $dirlog;
+}
 
 while (my ($f,$o) = each %file_ops) {
     my $op = ref($o)? $o->[0] : $o;
