@@ -4,7 +4,7 @@ use Test::More;
 use lib '.';
 use DetectRoll;
 
-my $dir = 'labor-day';
+my $dir = 't/photos/labor-day';
 my $dr=DetectRoll->new($dir);
 ok($dr->has_roll, "detect rollover");
 my ($left,$right) = $dr->find_roll;
