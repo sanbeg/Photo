@@ -13,7 +13,6 @@ $src->touch(1, 2, 3);
 $dst->touch(4);
 
 ok (!system("./scan.pl -log $d/src $d/dst"), "run scan");
-system "ls $d/dst";
 
 ok (-f $dst->path($_), "File was copied: $_") for 1,2,3;
 ok ($dst->has($_), "File was copied: $_") for 1,2,3;
