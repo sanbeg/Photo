@@ -68,6 +68,14 @@ sub downcase( $ ) {
     $self->{suffix} = uc $self->{suffix};
 }
 
+sub copy_timestamp( $$ ) {
+    my ($src,$dst) = @_;
+    
+    my @stat = stat $src or die "stat $src: $!";
+    my ($at,$mt) = @stat[8,9];
+    utime $at,$mt, $dst or die "utime $dst: $!";
+}
+
 sub _copy ( $$ ) {
     my ($src, $dst) = @_;
     my $real_dst = $dst;
@@ -89,6 +97,7 @@ sub _copy ( $$ ) {
     unless ($dst eq $real_dst) {
 	rename $dst, $real_dst or die "$real_dst: $!";
     }
+    copy_timestamp $src, $real_dst;
 }
 
 
@@ -165,7 +174,7 @@ sub rotate( $ ) {
     my $self = shift;
     if (@{$self->{copied}}) {
 	print "rotating images...\n";
-	system 'jhead', '-autorot', @{$self->{copied}};
+	system 'jhead', '-ft', '-autorot', @{$self->{copied}};
     }
 };
 
