@@ -32,7 +32,14 @@ die "too many args" if @ARGV;
 
 
 
-unless (-d $dst) {
+if (-d $dst) {
+    if ($freshen) {
+	my ($dst1,$dst2) = DetectRoll->new($dst)->find_roll();
+	my ($fresh1,$fresh2) = DetectRoll->new($freshen)->find_roll();
+	warn "DUr= $fresh1 $dst2";
+	die "args in wrong order?" if $fresh1 >= $dst1;
+    }
+}else{
     mkdir $dst or die "$dst: $!";
     $opt{fresh}=0;
 };
