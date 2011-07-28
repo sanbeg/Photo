@@ -80,8 +80,8 @@ if ($count_rmdir_not_empty and ! $dry_run) {
 }
 
 
-#create new dirs
-foreach (@{$scan->{dirs}}) {
+#create new dirs (sort so we create parent dirs first)
+foreach (sort @{$scan->{dirs}}) {
     unless (-d $scan2->{dir}."/$_") {
 	print "mkdir $_\n" if $verbose;
 	unless ($dry_run) {
