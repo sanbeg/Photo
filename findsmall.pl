@@ -51,7 +51,17 @@ sub scan_dir( $ ) {
 				print "  ->$bigpath\n";
 				my $out = $bigpath;
 				$out =~ s:/:-:g;
-				system "convert -resize 800x800 '$bigpath' '800x/$out'";
+				system "convert -resize 800x600^ '$bigpath' '800x/tmp.jpg'";
+
+				$exiftool->ExtractInfo("800x/tmp.jpg", {FastScan=>1});
+				my $info = $exiftool->GetInfo('ImageWidth');
+
+				my $shave = ( $info->{ImageWidth} - 800 ) / 2;
+				#warn "convert -shave ${shave}x0 '800x/tmp.jpg' '800x/$out'";
+				#system "convert -shave $shave '800x/tmp.jpg' '800x/$out'";
+				system "convert -crop 800x600+$shave '800x/tmp.jpg' '800x/$out'";
+				unlink "800x/tmp.jpg";
+				#exit(1);
 			}
 		}
 	}
