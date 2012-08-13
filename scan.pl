@@ -23,6 +23,8 @@ GetOptions ('n|dry-run'=>\$dry_run, verbose=>\$verbose,
 	    'ignore=s'=>\@ignore, 'only=s'=>\@only, 'log!'=>\$do_log_dirs);
 
 my $dir = shift or die "Usage: $0 SRC DST";
+my $dir2 = shift die "Usage: $0 SRC DST";
+
 my $scan=FileLoc->new($dir);
 $scan->ignore_extension($_) foreach @ignore;
 $scan->only_extension($_) foreach @only;
@@ -33,7 +35,6 @@ my ($src_ext,$src_ext_cnt) = $scan->max_ext;
 #print "$dir: @ext\n";# if @ext and defined $ext[0];
 printf qq(Source type: "$src_ext" (%0.1f%%)\n), $src_ext_cnt*100;
 #print Dumper $scan;
-my $dir2 = shift die "Usage: $0 SRC DST";
 my $scan2 = FileLoc->new($dir2);
 $scan2->ignore_extension($_) foreach @ignore;
 $scan2->only_extension($_) foreach @only;
