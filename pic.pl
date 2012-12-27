@@ -8,6 +8,7 @@ use lib "$FindBin::Bin/../perl";
 use CPPic;
 use DetectRoll;
 use CamRoll;
+use DirLog;
 
 #unimplemented
 my $move;
@@ -36,7 +37,7 @@ if (-d $dst) {
     if ($freshen) {
 	my ($dst1,$dst2) = DetectRoll->new($dst)->find_roll();
 	my ($fresh1,$fresh2) = DetectRoll->new($freshen)->find_roll();
-	warn "DUr= $fresh1 $dst2";
+	#warn "DUr= $fresh1 $dst2";
 	die "args in wrong order?" if $fresh1 >= $dst1;
     }
 }else{
@@ -112,3 +113,5 @@ $pic->copy_all($dst);
 #copy 
 
 $pic->rotate if $opt{rotate};
+DirLog->new($dst)->write($dst);
+

@@ -1,6 +1,7 @@
 #include "FindJpeg.hh"
 #include <cstdio>
 #include <cstring>
+#include <sys/stat.h>
 
 bool FindJpeg::scan () 
 {
@@ -13,19 +14,48 @@ bool FindJpeg::scan ()
       
       if (de->d_name[0] == '.')
 	continue;
+#ifdef _DIRENT_HAVE_D_TYPE
       switch (de->d_type) 
 	{
 	case DT_DIR:
 	  dirs_.push_back( dir_ + "/" + de->d_name );
 	  break;
 	case DT_REG:
-	  int len = strlen(de->d_name);
-	  if (len < 5) break;
-	  const char * ext = de->d_name + len - 4;
-	  if (strncasecmp(ext,".jpg",4)) break;
-	  file_ = dir_ + "/" + de->d_name;
-	  return true;
+	  {
+	    int len = strlen(de->d_name);
+	    if (len < 5) break;
+	    const char * ext = de->d_name + len - 4;
+	    if (strncasecmp(ext,".jpg",4)) break;
+	    file_ = dir_ + "/" + de->d_name;
+	    return true;
+	  }
+	  
+	case DT_UNKNOWN:
+#endif
+	  {
+	    
+	    //TODO - check for file type & repeat above logic...
+	    std::string path = dir_ + "/" + de->d_name;
+	    struct stat buf;
+	    stat(path.c_str(), &buf);
+	    if (S_ISDIR(buf.st_mode)) 
+	      {
+		dirs_.push_back( dir_ + "/" + de->d_name );
+	      }
+	    else if (S_ISREG(buf.st_mode)) 
+	      {
+		int len = strlen(de->d_name);
+		if (len < 5) break;
+		const char * ext = de->d_name + len - 4;
+		if (strncasecmp(ext,".jpg",4)) break;
+		file_ = path;
+		return true;
+	      }
+	  }
+	  
+#ifdef _DIRENT_HAVE_D_TYPE
 	}
+#endif
     }
   return false;
 }

@@ -165,7 +165,11 @@ sub copy_range( $$;$ ) {
 }
 
 sub copy_all($;$) {
-    $_[0]->copy_range($_,$_[1]) foreach @{$_[0]->{folders}};
+    foreach (@{$_[0]->{folders}}) {
+	eval {
+	    $_[0]->copy_range($_,$_[1]);
+	}
+    }
 };
 
 
