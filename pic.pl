@@ -101,8 +101,16 @@ if ($only_last_folder) {
     #exit 1;
 }
 
-
+my $dirlog = DirLog->new($dst);
 $pic->copy_all($dst);
+
+foreach my $file ( @{$pic->copied} ) {
+    my $base = $file;
+    $base =~ s:^\Q$dst/\E::;
+    $dirlog->add($base);
+}
+
+$dirlog->write($dst);
 
 #todo - if there's a new folder due to number rollover, that won't be copied
 #yet, so copy everything there.  If max(last_folder) < from, or last folder
@@ -113,5 +121,6 @@ $pic->copy_all($dst);
 #copy 
 
 $pic->rotate if $opt{rotate};
-DirLog->new($dst)->write($dst);
+
+#DirLog->new($dst)->write($dst);
 

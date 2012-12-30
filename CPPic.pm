@@ -108,8 +108,6 @@ sub copy_range( $$;$ ) {
     my ($src,$dst) = @_;
     $dst ||= $self->{dst};
 
-    $self->{copied} = [];
-
     unless (defined($to) and defined($from)) {
 	#my @glob = sort <$src/${prefix}*.$suffix>;
 
@@ -172,6 +170,9 @@ sub copy_all($;$) {
     }
 };
 
+sub copied {
+    return defined($_[0]{copied}) ? $_[0]{copied} : [];
+};
 
 sub rotate( $ ) {
 #do auto rotation
