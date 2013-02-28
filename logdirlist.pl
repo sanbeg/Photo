@@ -4,6 +4,8 @@ use FindBin;
 use lib $FindBin::Bin;
 use DirLog;
 
-my $dir = shift;
-my $log = DirLog->new($dir);
-$log->write($dir);
+foreach my $dir (@ARGV) {
+  my $log = DirLog->new($dir);
+  $log->write($dir);
+}
+
