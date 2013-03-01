@@ -11,11 +11,11 @@ sub new {
 }
 
 sub DESTROY {
-    # my $self = shift;
-    # foreach my $file ( @{$self->{files}} ) {
-    # 	unlink "$self->{dir}/$file";
-    # };
-    # system "rmdir $self->{dir}";
+    my $self = shift;
+    foreach my $file ( @{$self->{files}} ) {
+    	unlink "$self->{dir}/$file";
+    };
+    system "rmdir $self->{dir}";
 }
 
 sub touch {
@@ -33,7 +33,12 @@ sub path {
 
 sub has {
     my ($self,$file) = @_;
-    return -f "$self->{dir}/$file";
+    if (-f "$self->{dir}/$file") {
+	push @{ $self->{files} }, $file;
+	return 1;
+    } else {
+	return 0;
+    }
 }
 
 

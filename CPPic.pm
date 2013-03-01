@@ -3,7 +3,7 @@ package CPPic;
 use strict;
 use Carp;
 use File::Glob qw(:globally :nocase);
-
+use FileUtil;
 our $move;
 our $downcase=1;
 our $prefix; # = 'dsc_';
