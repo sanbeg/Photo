@@ -3,7 +3,7 @@ package CPPic;
 use strict;
 use Carp;
 use File::Glob qw(:globally :nocase);
-use FileUtil;
+use FileUtil ('copy_file');
 our $move;
 our $downcase=1;
 our $prefix; # = 'dsc_';
@@ -68,37 +68,6 @@ sub downcase( $ ) {
     $self->{suffix} = uc $self->{suffix};
 }
 
-sub copy_timestamp( $$ ) {
-    my ($src,$dst) = @_;
-    
-    my @stat = stat $src or die "stat $src: $!";
-    my ($at,$mt) = @stat[8,9];
-    utime $at,$mt, $dst or die "utime $dst: $!";
-}
-
-sub _copy ( $$ ) {
-    my ($src, $dst) = @_;
-    my $real_dst = $dst;
-    $dst =~ s/\.+$/.tmp/;
-
-    my ($S,$D);
-    open $S, $src or die "$src: $!";
-    open $D, ">$dst" or die "$dst: $!";
-
-    my ($buf,$len);
-    while (1) {
-	$len = sysread $S,$buf,1024;
-	die "$src: $!" unless defined $len;
-	last if $len == 0;
-	syswrite $D,$buf,$len or die "$dst: $!";
-    }
-    close $S;
-    close $D;
-    unless ($dst eq $real_dst) {
-	rename $dst, $real_dst or die "$real_dst: $!";
-    }
-    copy_timestamp $src, $real_dst;
-}
 
 
 sub copy_range( $$;$ ) {
@@ -152,7 +121,7 @@ sub copy_range( $$;$ ) {
 		#move ($srcf, $dstf) or die "$file -> $dstf: $!\n";
 	    } else {
 		warn "copy: $srcf -> $dstf";
-		_copy ($srcf, $dstf) or die "$file -> $dstf: $!\n";
+		copy_file ($srcf, $dstf) or die "$file -> $dstf: $!\n";
 	    }
 	    push @{$self->{copied}}, $dstf;
 	    warn "copy $file\n" if $verbose>1;
