@@ -1,5 +1,7 @@
 package DirLog;
+use strict;
 use Carp;
+use FileUtil ('copy_file');
 my $file='.dirlog';
 my $sep=' ';
 
@@ -13,6 +15,7 @@ sub new {
     my $logfh;
     my %files;
 
+    #if log exists, scan it in
     open $logfh, "$dir/$file" and do {
 	while (<$logfh>) {
 	    chomp;
@@ -21,6 +24,8 @@ sub new {
 	}
 	close $logfh;
     };
+
+    
     opendir my($dh), $dir or croak "$dir: $!";
     while (my $file = readdir $dh) {
 	next if $file =~ /^\./;
@@ -74,19 +79,8 @@ sub existed {
 sub exists_now {
     my $self = shift;
     my $file = shift;
-    return defined $self->{$file} and $_exists_now{$self->{$file}};
+    return (defined($self->{$file}) and $_exists_now{$self->{$file}});
 }
-
-# sub add {
-#     my $self = shift;
-#     my $file = shift;
-#     $self->{$file}='A';
-# }
-# sub remove {
-#     my $self = shift;
-#     my $file = shift;
-#     $self->{$file}='R';
-# }
 
 sub set {
     $_[0]{$_[1]}=$_[2];
@@ -99,4 +93,41 @@ sub remove {
     set (@_, 'R');
 }
 
+my @order = ('R', 'L', 'A', 'F', 'T');
+my %order = map { $order[$_] => $_ } 0..$#order;
+
+sub combine {
+    my ($class, $lhs, $rhs) = @_;
+    my %stats = %$lhs;
+    while (my($file,$state) = each %$rhs) {
+	if (not defined $stats{$file}) {
+	    $stats{$file} = $state;
+	} elsif ($order{$state} < $order{ $stats{$file} } ){
+	    $stats{$file} = $state;
+	}
+    }
+    bless \%stats, $class;
+}
+
+sub sync_dir {
+    my ($self,$self_dir,$other_dir) = @_;
+    my $other = ref($self)->new($other_dir);
+
+    while (my($file,$state) = each %$other) {
+	if (not defined $self->{$file}) {
+	    $self->{$file} = $state;
+	    copy_file("$other_dir/$file", "$self_dir/$file")
+		if $_exists_now{$state};
+	} elsif ($order{$state} < $order{ $self->{$file} } ){
+	    warn "$file $self->{$file} -> $state";
+	    if ($self->exists_now($file)) {
+		unlink "$self_dir/$file" unless $other->exists_now($file);
+	    } else {
+		copy_file("$other_dir/$file", "$self_dir/$file")
+		    if $other->exists_now($file);
+	    }
+	    $self->{$file} = $state;
+	}
+    }
+}    
 1;
