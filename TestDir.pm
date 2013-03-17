@@ -37,6 +37,7 @@ sub has {
 	push @{ $self->{files} }, $file;
 	return 1;
     } else {
+	#should remove from list of files?
 	return 0;
     }
 }
