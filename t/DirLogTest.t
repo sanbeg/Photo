@@ -51,7 +51,7 @@ do {
 
 do {
   $log_b->write('t/tmp/b');  
-  $log_a->sync_dir('t/tmp/a', 't/tmp/b');
+  $log_a->sync_dir('t/tmp/a', DirLog->new('t/tmp/b'));
   
   for my $i (1 .. 5) {
     ok($log_a->existed($i), "$i existed");
