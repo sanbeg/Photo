@@ -57,6 +57,7 @@ do {
   $log_b->write( $tmpdir->path('b'));  
   $log_a->sync_dir( $tmpdir->path('a'), DirLog->new( $tmpdir->path('b')));
 
+  $tmpdir->has( 'b/.dirlog' );
   for my $i (1 .. 5) {
     ok($log_a->existed($i), "$i existed");
   }
