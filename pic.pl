@@ -70,6 +70,7 @@ if (defined $opt{from}) {
     my $dr=DetectRoll->new($refresh);
 
     my ($left,$right) = $dr->find_roll;
+
     if ($left < $right) {
 	print "last image is $left; earliest is $right\n";
 	$pic->{from} = $left+1;
@@ -101,7 +102,10 @@ if ($only_last_folder) {
     #exit 1;
 }
 
+warn "copying to $dst";
 my $dirlog = DirLog->new($dst);
+warn "copying to $dst";
+
 $pic->copy_all($dst);
 
 foreach my $file ( @{$pic->copied} ) {

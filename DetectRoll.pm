@@ -68,7 +68,7 @@ sub find_roll {
     my ($min,$max, $minf, $maxf);
 
     while (my $fn = readdir $self->{DH}) {
-	next unless $fn =~ /([0-9]+).*\Q$suffix/i;
+	next unless $fn =~ /dsc_([0-9]+).*\Q$suffix/i; #bogus paths will loop
 	$filenames{int($1)} = $fn;
 	if (!defined($min) or $min > $1) {
 	    $min=$1;
@@ -79,7 +79,6 @@ sub find_roll {
 	    $maxf=$fn;
 	}
     }
-
     my $mid=int(($min+$max)/2);
     my $left;
     my $right;
@@ -88,7 +87,6 @@ sub find_roll {
 	$left=$right=$mid;
 	-- $left while $left>=$min and ! exists $filenames{$left};
 	++ $right while $right <= $max and ! exists $filenames{$right};
-
 	warn "compare $min $left $mid $right $max" if $debug;
 	warn "$minf $maxf" if $debug;
 	warn "$filenames{$left} $filenames{$right}" if $debug;
