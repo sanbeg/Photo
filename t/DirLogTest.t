@@ -7,32 +7,38 @@ use Test::More;
 use lib '.';
 use DirLog;
 
+use lib '../Test-Directory/lib';
+use Test::Directory;
+
 my $log = DirLog->new('t/photos/labor-day');
 ok($log, 'got object');
 ok($log->exists_now('DSC_0001.JPG'), 'found file');
 ok(not($log->exists_now('DSC_0031.JPG')), "didn't find file");
 
-my $log_a = DirLog->new('t/tmp/a');
-my $log_b = DirLog->new('t/tmp/b');
+my $tmpdir = Test::Directory->new;
+
+$tmpdir->mkdir('a');
+$tmpdir->mkdir('b');
+
+my $log_a = DirLog->new( $tmpdir->path('a'));
+my $log_b = DirLog->new( $tmpdir->path('b'));
 
 for my $i (1 .. 5 ) {
   $log_a->add($i);
   $log_b->add($i);
-  system("touch t/tmp/a/$i t/tmp/b/$i");
+  $tmpdir->touch("a/$i", "b/$i");
 };
 
-use Data::Dumper;
 ok($log_a->remove(2));
-unlink("t/tmp/a/2");
 ok($log_b->remove(3));
-unlink("t/tmp/b/3");
 
-#warn Dumper($log_a);
+$tmpdir->remove_files( 'a/2', 'b/3');
+
 ok(not($log_a->exists_now(2)), "2 was removed from a");
 
 do {
   my $log_c = DirLog->combine($log_a,$log_b);
-  
+
   for my $i (1 .. 5) {
     is (
 	$log_c->exists_now($i),
@@ -41,29 +47,26 @@ do {
        );
     ok($log_c->existed($i), "$i existed");
   }
-  
-  #warn Dumper($log_b,$log_c);
-  
+
   for my $i (2,3) {
     ok(not($log_c->exists_now($i)), "$i not in combined");
   };
 };
 
 do {
-  $log_b->write('t/tmp/b');  
-  $log_a->sync_dir('t/tmp/a', DirLog->new('t/tmp/b'));
-  
+  $log_b->write( $tmpdir->path('b'));  
+  $log_a->sync_dir( $tmpdir->path('a'), DirLog->new( $tmpdir->path('b')));
+
   for my $i (1 .. 5) {
     ok($log_a->existed($i), "$i existed");
   }
-  
-  #warn Dumper($log_b,$log_c);
-  
+
   for my $i (2,3) {
     ok(not($log_a->exists_now($i)), "$i not in combined");
-    ok(not(-f "t/tmp/a/$i"), "$i was removed");
+    $tmpdir->hasnt("a/$i", "$i was removed");
   };
 };
 
+$tmpdir->is_ok;
 
 done_testing;
