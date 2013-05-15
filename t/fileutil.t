@@ -12,7 +12,8 @@ $td->mkdir('dst');
 copy_file( $td->path('src/file'), $td->path('dst/file') );
 $td->has( 'dst/file', 'file was copied' );
 
-copy_file( $td->path('src/file'), $td->path('dst/file.txt') );
+$td->create( 'src/file.txt', content=>'hello world' );
+copy_file( $td->path('src/file.txt'), $td->path('dst/file.txt') );
 $td->has( 'dst/file.txt', 'file was copied' );
 
 
