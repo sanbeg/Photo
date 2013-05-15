@@ -6,3 +6,6 @@ fjc: FindJpeg.cc
 validate: ValidJpeg.cc
 
 find-bad:FindJpeg.cc ValidJpeg.cc
+
+test:
+	prove -I../Test-Directory/lib -r t

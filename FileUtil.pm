@@ -15,7 +15,7 @@ sub copy_timestamp( $$ ) {
 sub copy_file ( $$ ) {
     my ($src, $dst) = @_;
     my $real_dst = $dst;
-    $dst =~ s/\.+$/.tmp/;
+    $dst =~ s/\..+$/.tmp/;
 
     my ($S,$D);
     open $S, $src or die "$src: $!";
