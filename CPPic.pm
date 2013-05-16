@@ -152,12 +152,13 @@ sub rotate( $ ) {
     }
 };
 
+our $etc_mtab = '/etc/mtab';
 sub find_cameras( $ ) {
     my $self = shift;
     my ($MTAB,$DCIM);
     my $f = $self->{folders} = [];
 
-    open $MTAB, '/etc/mtab';
+    open $MTAB, '<', $etc_mtab;
     while (<$MTAB>) {
 	my ($dev,$dir,$fs) = split ' ';
 	$dir =~ s/\\([0-8]{3})/chr oct $1/ge;

@@ -139,7 +139,7 @@ sub sync_dir_to_file {
 	} elsif ($order{$other_state} < $order{ $self->{$file} } ){
 	    #warn "$file $self->{$file} -> $other_state";
 	    if ($self->exists_now($file)) {
-		#unlink "$self_dir/$file" unless $other->exists_now($file);
+		unlink "$self_dir/$file" unless $other->exists_now($file);
 		warn "rm $self_dir/$file" unless $other->exists_now($file);
 	    } else {
 		warn "missing $file" if $other->exists_now($file);
