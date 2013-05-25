@@ -18,19 +18,15 @@ copy_file( $td->path('src/file.txt'), $td->path('dst/file.txt') );
 $td->has( 'dst/file.txt', 'file was copied' );
 
 $td->create( 'lock' );
-$td->create( 'lock.lck' );
-chmod( 0, $td{lock}, $td{'lock.lck'});
+chmod( 0, $td->path('lock') );
 
 dies_ok { 
-	copy_file( $td{lock}, $td{copy});
+	copy_file( $td->path('lock'), $td->path('copy'));
 } "Die if can't read";
 
-dies_ok { 
-	copy_file( $td{'src/file.txt'}, $td{'lock'});
-}	"Die if can't write, straight copy";
-# dies_ok { 
-# 	copy_file( $td{'src/file.txt'}, $td{'lock.lck'});
-# }	"Die if can't write, copy/rename";
+throws_ok { 
+	copy_file( $td->path('src/file.txt'), $td->path('lock'));
+}	qr(/lock:), "Die if can't write, straight copy";
  
 $td->is_ok;
 done_testing;
