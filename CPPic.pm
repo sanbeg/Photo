@@ -4,6 +4,7 @@ use strict;
 use Carp;
 use File::Glob qw(:globally :nocase);
 use FileUtil ('copy_file');
+use DirLog;
 our $move;
 our $downcase=1;
 our $prefix; # = 'dsc_';
@@ -74,7 +75,7 @@ sub copy_range( $$;$ ) {
     my $template="${prefix}%.4i.$suffix";
     my $self = shift;
     my ($to,$from) = ($self->{to}, $self->{from});
-    my ($src,$dst) = @_;
+    my ($src,$dst,$dirlog) = @_;
     $dst ||= $self->{dst};
 
     unless (defined($to) and defined($from)) {
@@ -110,11 +111,15 @@ sub copy_range( $$;$ ) {
     die "no from" unless defined $from;
     foreach my $fileno ($from .. $to) {
 	my $file = sprintf $template, $fileno;
-#    my $srcf = "$src/$file";
 	my $srcf = "$src/".($downcase?uc($file):$file);
 	if (-r $srcf) {
-	    #my $dstf = $downcase?lc("$dst/$file"):"$dst/$file";
-	    my $dstf = $downcase?($dst."/".lc($file)):"$dst/$file";
+	    my $base = $downcase ? lc($file) : $file;
+	    my $dstf = "$dst/$base";
+
+	    if (defined($dirlog) and $dirlog->existed($base)) {
+		warn "not replacing $file\n";
+		next;
+	    }
 	    if ($test) {
 		#print "test $file -> $dstf\n";
 	    } elsif ($move) {
@@ -124,6 +129,7 @@ sub copy_range( $$;$ ) {
 		copy_file ($srcf, $dstf) or die "$file -> $dstf: $!\n";
 	    }
 	    push @{$self->{copied}}, $dstf;
+	    $dirlog->add($base) if defined $dirlog;
 	    warn "copy $file\n" if $verbose>1;
 	} else {
 	    warn "skip $srcf\n" if $verbose>1;
@@ -132,11 +138,14 @@ sub copy_range( $$;$ ) {
 }
 
 sub copy_all($;$) {
-    foreach (@{$_[0]->{folders}}) {
+    my ($self,$dst) = @_;
+    my $dirlog = DirLog->new($dst);
+    foreach my $src (@{$self->{folders}}) {
 	eval {
-	    $_[0]->copy_range($_,$_[1]);
+	    $self->copy_range($src,$dst,$dirlog);
 	}
     }
+    $dirlog->write($dst);
 };
 
 sub copied {

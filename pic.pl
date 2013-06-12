@@ -8,7 +8,6 @@ use lib "$FindBin::Bin/../perl";
 use CPPic;
 use DetectRoll;
 use CamRoll;
-use DirLog;
 
 #unimplemented
 my $move;
@@ -17,11 +16,18 @@ my @fake_camera;
 my %opt = (fresh=>1, rotate=>1);
 GetOptions(
     \%opt,
-    'from=i', 'rotate!'=>, 'freshen!', 'move!'=>\$move, 
-    'test!'=>\$CPPic::test, 'verbose+'=>\$CPPic::verbose,
-    'prefix=s'=>\$CPPic::prefix, 'last!'=>\$only_last_folder,
-#testing opt, local copy of camera.  Better than mount -oloop?
-    'fake=s'=>\@fake_camera, 'fakesub=s@'=> sub{push @fake_camera, <$_[1]/*>},
+    'from=i', 
+    'rotate!'=>,
+    'freshen!', 
+    'move!'=>\$move, 
+    'test!'=>\$CPPic::test,
+    'verbose+'=>\$CPPic::verbose,
+    'prefix=s'=>\$CPPic::prefix,
+    'suffix=s'=>\$CPPic::suffix,
+    'last!'=>\$only_last_folder,
+    #testing opt, local copy of camera.  Better than mount -oloop?
+    'fake=s'=>\@fake_camera, 
+    'fakesub=s@'=> sub{push @fake_camera, <$_[1]/*>},
     );
 
 umask 033;
@@ -103,18 +109,8 @@ if ($only_last_folder) {
 }
 
 warn "copying to $dst";
-my $dirlog = DirLog->new($dst);
-warn "copying to $dst";
 
-$pic->copy_all($dst);
-
-foreach my $file ( @{$pic->copied} ) {
-    my $base = $file;
-    $base =~ s:^\Q$dst/\E::;
-    $dirlog->add($base);
-}
-
-$dirlog->write($dst);
+$pic->copy_all($dst,$dirlog);
 
 #todo - if there's a new folder due to number rollover, that won't be copied
 #yet, so copy everything there.  If max(last_folder) < from, or last folder
