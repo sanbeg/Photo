@@ -110,7 +110,7 @@ if ($only_last_folder) {
 
 warn "copying to $dst";
 
-$pic->copy_all($dst,$dirlog);
+$pic->copy_all($dst);
 
 #todo - if there's a new folder due to number rollover, that won't be copied
 #yet, so copy everything there.  If max(last_folder) < from, or last folder
