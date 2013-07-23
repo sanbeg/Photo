@@ -155,7 +155,7 @@ sub copied {
 sub rotate( $ ) {
 #do auto rotation
     my $self = shift;
-    if (@{$self->{copied}}) {
+    if (defined $self->{copied} and @{$self->{copied}}) {
 	print "rotating images...\n";
 	system 'jhead', '-ft', '-autorot', @{$self->{copied}};
     }

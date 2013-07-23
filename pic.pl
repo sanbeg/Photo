@@ -73,15 +73,20 @@ if (defined $opt{from}) {
     $pic->freshen( $refresh );
     warn $pic->{from};
 
-    my $dr=DetectRoll->new($refresh);
-
-    my ($left,$right) = $dr->find_roll;
-
-    if ($left < $right) {
+    eval {
+      $DetectRoll::prefix = $CPPic::prefix;
+      $DetectRoll::suffix = '.' . $CPPic::suffix;
+      
+      my $dr=DetectRoll->new($refresh);
+      
+      my ($left,$right) = $dr->find_roll;
+      
+      if ($left < $right) {
 	print "last image is $left; earliest is $right\n";
 	$pic->{from} = $left+1;
 	$pic->{to} = $right-1;
 	$only_last_folder=1;
+      }
     }
 } elsif ($opt{fresh}) {
     $pic->freshen( $dst );
