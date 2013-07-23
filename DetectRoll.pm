@@ -3,7 +3,7 @@ use strict;
 use Carp;
 use Image::ExifTool ':Public';
 
-our $suffix=".$CPPic::suffix";
+our $suffix='.jpg';
 our $prefix = 'dsc_';
 
 sub new ( $$ ) {
@@ -46,7 +46,7 @@ sub has_roll {
     my ($min,$max);
     my ($minf,$maxf);
     while (my $fn = readdir $self->{DH}) {
-	next unless $fn =~ /([0-9]+).*\$suffix/i;
+	next unless $fn =~ /([0-9]+).*\Q$suffix/i;
 	if (!defined($min) or $min > $1) {
 	    $minf=$fn;
 	    $min=$1;
