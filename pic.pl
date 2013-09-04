@@ -40,7 +40,7 @@ die "too many args" if @ARGV;
 
 
 if (-d $dst) {
-    if ($freshen) {
+    if ($freshen and $freshen ne $dst) {
 	my ($dst1,$dst2) = DetectRoll->new($dst)->find_roll();
 	my ($fresh1,$fresh2) = DetectRoll->new($freshen)->find_roll();
 	#warn "DUr= $fresh1 $dst2";

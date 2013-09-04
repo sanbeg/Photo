@@ -2,6 +2,13 @@
 
 use Image::ExifTool;
 use File::Spec;
+use Getopt::Long;
+
+my $dry_run;
+my $dst_dir;
+my $write_dir='800x';
+
+GetOptions( 'dry-run' => \$dry_run, 'check=s' => \$dst_dir, 'write=s'=>\$write_dir ) or die;
 
 $exiftool = Image::ExifTool->new;
 
@@ -40,6 +47,7 @@ sub scan_dir( $ ) {
 					for my $other (<$dir/../*/$big>) {
 						if (-s $other > 500_000) {
 							$bigpath = $other;
+							$bigpath =~ s:/[^/]+$:/$big:;
 							last;
 						}
 					}
@@ -48,19 +56,25 @@ sub scan_dir( $ ) {
 				last if defined $bigpath;
 			}
 			if (defined $bigpath) {
-				print "  ->$bigpath\n";
 				my $out = $bigpath;
-				$out =~ s:/:-:g;
-				system "convert -resize 800x600^ '$bigpath' '800x/tmp.jpg'";
+				$out =~ s:/+:-:g;
 
-				$exiftool->ExtractInfo("800x/tmp.jpg", {FastScan=>1});
+				next if defined($dst_dir) and -f "$dst_dir/$out";
+				next if defined($write_dir) and -f "$write_dir/$out";
+
+				print "  ->$bigpath\n";
+				next if $dry_run;
+				system "convert -resize 800x600^ '$bigpath' '$write_dir/tmp.jpg'";
+
+				$exiftool->ExtractInfo("$write_dir/tmp.jpg", {FastScan=>1});
 				my $info = $exiftool->GetInfo('ImageWidth');
 
 				my $shave = ( $info->{ImageWidth} - 800 ) / 2;
 				#warn "convert -shave ${shave}x0 '800x/tmp.jpg' '800x/$out'";
 				#system "convert -shave $shave '800x/tmp.jpg' '800x/$out'";
-				system "convert -crop 800x600+$shave '800x/tmp.jpg' '800x/$out'";
-				unlink "800x/tmp.jpg";
+				system "convert -crop 800x600+$shave '$write_dir/tmp.jpg' '$write_dir/$out'";
+				die "convert failed" if $?;
+				unlink "$write_dir/tmp.jpg";
 				#exit(1);
 			}
 		}
