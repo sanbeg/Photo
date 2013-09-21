@@ -85,7 +85,7 @@ sub find_roll {
 	}
     }
 
-    die "No files found" unless keys %filenames;
+    die "No files found: $prefix$suffix" unless keys %filenames;
 
     my $mid=int(($min+$max)/2);
     my $left;

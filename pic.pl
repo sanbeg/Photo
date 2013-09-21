@@ -37,7 +37,8 @@ die "Copy to where?" unless defined $dst;
 my $freshen=shift;
 die "too many args" if @ARGV;
 
-
+$DetectRoll::prefix = $CPPic::prefix;
+$DetectRoll::suffix = '.' . $CPPic::suffix;
 
 if (-d $dst) {
     if ($freshen and $freshen ne $dst) {
@@ -74,9 +75,6 @@ if (defined $opt{from}) {
     warn $pic->{from};
 
     eval {
-      $DetectRoll::prefix = $CPPic::prefix;
-      $DetectRoll::suffix = '.' . $CPPic::suffix;
-      
       my $dr=DetectRoll->new($refresh);
       
       my ($left,$right) = $dr->find_roll;
