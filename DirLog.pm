@@ -82,6 +82,8 @@ sub write {
     my $dir = shift;
     my $logfh;
 
+    croak "Need a directory to write the log in" unless defined $dir;
+
     open $logfh, ">$dir/$file" or die "$dir/$file";
     foreach my $file (sort keys %{$self}) {
 	print $logfh "$self->{$file}$sep$file\n";
@@ -132,24 +134,29 @@ sub sync_dir_to_file {
     my ($self, $self_dir, $other) = @_;
 
     while (my($file,$other_state) = each %$other) {
-	    warn "$file $self->{$file} -> $other_state" unless $self->{$file} eq $other_state;
-	if (not defined $self->{$file}) {
-	    $self->{$file} = $other_state;
-	    warn "Missing $file" if $_exists_now{$other_state};
-	} elsif ($order{$other_state} < $order{ $self->{$file} } ){
-	    #warn "$file $self->{$file} -> $other_state";
-	    if ($self->exists_now($file)) {
-		unlink "$self_dir/$file" unless $other->exists_now($file);
-		warn "rm $self_dir/$file" unless $other->exists_now($file);
-	    } else {
-		warn "missing $file" if $other->exists_now($file);
-	    }
-	    $self->{$file} = $other_state;
+      my $self_file = $self->{$file};
+      $self_file = '' unless defined $self_file;
+
+      warn "$file $self_file -> $other_state"
+	unless $self_file eq $other_state;
+
+      if (not defined $self->{$file}) {
+	$self->{$file} = $other_state;
+	warn "Missing $file" if $_exists_now{$other_state};
+      } elsif ($order{$other_state} < $order{ $self->{$file} } ){
+	#warn "$file $self->{$file} -> $other_state";
+	if ($self->exists_now($file)) {
+	  unlink "$self_dir/$file" unless $other->exists_now($file);
+	  warn "rm $self_dir/$file" unless $other->exists_now($file);
 	} else {
-	    #warn "$file $self->{$file} -> $other_state";
+	  warn "missing $file" if $other->exists_now($file);
 	}
+	$self->{$file} = $other_state;
+      } else {
+	#warn "$file $self->{$file} -> $other_state";
+      }
     }
-}    
+  }    
 
 sub sync_dir {
     my ($self,$self_dir,$other_dir) = @_;

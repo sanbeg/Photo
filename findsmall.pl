@@ -57,6 +57,7 @@ sub scan_dir( $ ) {
 			}
 			if (defined $bigpath) {
 				my $out = $bigpath;
+				$out =~ s:^\.\./::;
 				$out =~ s:/+:-:g;
 
 				next if defined($dst_dir) and -f "$dst_dir/$out";

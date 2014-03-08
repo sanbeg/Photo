@@ -73,6 +73,7 @@ sub find_roll {
     my ($min,$max, $minf, $maxf);
 
     while (my $fn = readdir $self->{DH}) {
+      #FIXME - prefix unitialised when creating new dir.
 	next unless $fn =~ /$prefix([0-9]+).*\Q$suffix/i; #bogus paths will loop
 	$filenames{int($1)} = $fn;
 	if (!defined($min) or $min > $1) {
