@@ -75,9 +75,8 @@ sub downcase( $ ) {
 
 sub copy_range( $$;$ ) {
     my $template="${prefix}%.4i.$suffix";
-    my $self = shift;
+    my ($self,$src,$dst,$dirlog) = @_;
     my ($to,$from) = ($self->{to}, $self->{from});
-    my ($src,$dst,$dirlog) = @_;
     $dst ||= $self->{dst};
 
     unless (defined($to) and defined($from)) {

@@ -4,7 +4,6 @@ use strict;
 use Getopt::Long;
 use FindBin;
 use lib "$FindBin::Bin";
-use lib "$FindBin::Bin/../perl";
 use CPPic;
 use DetectRoll;
 use CamRoll;
@@ -123,7 +122,8 @@ $pic->copy_all($dst);
 #i.e. imageno(folder)<imageno(prev_folder) => last rollover point.
 #copy 
 
+#DirLog->new($dst)->write($dst);
+
 $pic->rotate if $opt{rotate};
 
-#DirLog->new($dst)->write($dst);
 

@@ -23,9 +23,18 @@ sub _read_log {
 sub new {
     my $class = shift;
     my $dir = shift;
+    my $opts = shift;
     my %stats;
     my $logfh;
     my %files;
+
+    my $found_state = 'F';
+    if (defined $opts->{state}) {
+	$found_state = $opts->{state};
+	croak "Invalid state: $found_state"
+	    unless $found_state =~ m/^[ARFLT]$/;
+    };
+
 
     #if log exists, scan it in
     open $logfh, '<', "$dir/$file" and do {
@@ -55,7 +64,7 @@ sub new {
     while (my ($k,$v) = each %files ) {
 	$v = $stats{$k};
 	if (not defined $v) {
-	    $stats{$k} = 'F';
+	    $stats{$k} = $found_state;
 	} elsif ($v eq 'R' or $v eq 'L') {
 	    $stats{$k} = 'T';
 	}
