@@ -36,6 +36,16 @@ die "Copy to where?" unless defined $dst;
 my $freshen=shift;
 die "too many args" if @ARGV;
 
+my $pic = CPPic->new;
+
+if (@fake_camera) {
+    $pic->{folders}=\@fake_camera;
+} else {
+    $pic->find_cameras;
+}
+
+$pic->init_src;
+
 $DetectRoll::prefix = $CPPic::prefix;
 $DetectRoll::suffix = '.' . $CPPic::suffix;
 
@@ -51,16 +61,6 @@ if (-d $dst) {
     $opt{fresh}=0;
 };
 
-
-my $pic = CPPic->new;
-
-if (@fake_camera) {
-    $pic->{folders}=\@fake_camera;
-} else {
-    $pic->find_cameras;
-}
-
-$pic->init_src;
 
 my ($roll,$maxr) = CamRoll::find($pic);
 CamRoll::kill($pic,$roll) if defined $roll;
