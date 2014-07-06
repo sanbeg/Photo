@@ -36,6 +36,17 @@ sub freshen( $$;$ ) {
 		warn "freshen boundary; skip file: $start";
 	    }
 	}
+
+	#check dirlog, to see if the start previously existed.
+	my $dirlog = DirLog->new($dst);
+	for (;;) {
+	  if ($dirlog->existed("$prefix$self->{from}.$suffix")) {
+	    ++ $self->{from};
+	  } else {
+	    last;
+	  }
+	}
+
     }
 }
 
