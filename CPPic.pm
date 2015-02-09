@@ -67,7 +67,10 @@ sub init_src ($) {
 	    closedir $dh;
 	}
 	my @c = keys %candidates;
-	if (@c > 1) {
+
+	if (@c == 0) {
+	    die "No source prefix found";
+	} elsif (@c > 1) {
 	    die "Multiple prefixes found: " . join (", ", @c);
 	} else {
 	    $prefix = $downcase? lc($c[0]) : $c[0];

@@ -57,7 +57,6 @@ if (-d $dst) {
 	die "args in wrong order?" if $fresh1 >= $dst1;
     }
 }else{
-    mkdir $dst or die "$dst: $!";
     $opt{fresh}=0;
 };
 
@@ -70,7 +69,13 @@ if (defined $opt{from}) {
 } elsif (defined $freshen) {
     my $refresh = ($freshen eq '') ? $dst : $freshen;
     warn "Freshening $refresh";
+
     $pic->freshen( $refresh );
+    unless ( -d $dst ) {
+	#create destination after we've verfied the source
+	mkdir $dst or die "$dst: $!";
+    }
+
     warn $pic->{from};
 
     eval {
