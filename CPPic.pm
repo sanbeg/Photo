@@ -57,7 +57,7 @@ sub init_src ($) {
 	my %candidates;
 	foreach my $src (@{$self->{folders}}) {
 	    opendir my($dh), $src or die "$src: $!";
-	    
+	    warn "try $src";
 	    while (my $file = readdir($dh)) {
 		if ($file =~ m/(.+?)[0-9]+\.$suffix/i) {
 		    #warn "prefix=$1" if $verbose>2;

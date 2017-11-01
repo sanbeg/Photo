@@ -17,7 +17,7 @@ sub shutter_count( $$ ) {
 
     unless (exists $self->{sc}{$file}) {
       $self->{sc}{$file} = ImageInfo($self->{dir}."/".$file)->{ShutterCount};
-      die "Can't find shutter count" unless defined $self->{sc}{$file};
+      confess "Can't find shutter count" unless defined $self->{sc}{$file};
     }
 
     return $self->{sc}{$file};
@@ -86,7 +86,10 @@ sub find_roll {
 	}
     }
 
-    die "No files found: $prefix$suffix" unless keys %filenames;
+    unless (keys %filenames) {
+	warn "No files found: $prefix$suffix";
+	return;
+    }
 
     my $mid=int(($min+$max)/2);
     my $left;
@@ -113,7 +116,7 @@ sub find_roll {
 	       $self->shutter_count($maxf)) {
 	    $mid=($left+$min)/2;
 	    last if $mid < $min;
-	}else {
+	} else {
 	    last;
 	}
     }

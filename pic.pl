@@ -7,6 +7,7 @@ use lib "$FindBin::Bin";
 use CPPic;
 use DetectRoll;
 use CamRoll;
+use Data::Dumper;
 
 #unimplemented
 my $move;
@@ -16,8 +17,10 @@ my %opt = (fresh=>1, rotate=>1);
 GetOptions(
     \%opt,
     'from=i', 
+    'to=i',
     'rotate!'=>,
     'freshen!', 
+    'video!',
     'move!'=>\$move, 
     'test!'=>\$CPPic::test,
     'verbose+'=>\$CPPic::verbose,
@@ -27,7 +30,12 @@ GetOptions(
     #testing opt, local copy of camera.  Better than mount -oloop?
     'fake=s'=>\@fake_camera, 
     'fakesub=s@'=> sub{push @fake_camera, <$_[1]/*>},
-    );
+    ) or die;
+
+if ($opt{video}) {
+    $CPPic::suffix = 'mov';
+    $opt{rotate} = 0;
+}
 
 umask 033;
 
@@ -44,17 +52,19 @@ if (@fake_camera) {
     $pic->find_cameras;
 }
 
+
+warn Dumper($pic);
 $pic->init_src;
 
 $DetectRoll::prefix = $CPPic::prefix;
 $DetectRoll::suffix = '.' . $CPPic::suffix;
 
 if (-d $dst) {
-    if ($freshen and $freshen ne $dst) {
+    if ($freshen and $freshen ne $dst and ! $opt{video} ) {
 	my ($dst1,$dst2) = DetectRoll->new($dst)->find_roll();
 	my ($fresh1,$fresh2) = DetectRoll->new($freshen)->find_roll();
 	#warn "DUr= $fresh1 $dst2";
-	die "args in wrong order?" if $fresh1 >= $dst1;
+	die "args in wrong order?" if defined $dst1 and $fresh1 >= $dst1;
     }
 }else{
     $opt{fresh}=0;
@@ -92,6 +102,10 @@ if (defined $opt{from}) {
     }
 } elsif ($opt{fresh}) {
     $pic->freshen( $dst );
+}
+
+if (defined $opt{to}) {
+    $pic->{to} = $opt{to};
 }
 
 if ($only_last_folder) {
