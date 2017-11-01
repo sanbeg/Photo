@@ -1,3 +1,7 @@
 language: perl
-install: cpanm Image::ExifTool Test::Directory
+install: cpanm Test::Directory
 test: prove -v
+addons:
+  apt:
+    packages:
+      - libimage-exiftool-perl
