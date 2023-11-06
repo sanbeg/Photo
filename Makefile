@@ -1,5 +1,5 @@
 CFLAGS=-std=gnu99
-CXXFLAGS=-g
+CXXFLAGS=-g -O0
 #CXXFLAGS+= -pg
 #CXXFLAGS+=-fprofile-arcs -ftest-coverage
 fjc: FindJpeg.cc

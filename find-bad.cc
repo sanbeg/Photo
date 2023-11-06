@@ -17,9 +17,21 @@ int main (int ac, const char ** argv )
       ValidJpeg vj;
       while (fj.next()) 
 	{
-	  const char * file = fj.get().c_str();
-       
-	  if (not vj.open(file) ) 
+	  const char * file = fj.get_c();
+	  //fprintf(stderr, "got file: %s\n", file);
+	  
+	  
+	  if (file == 0) 
+	    {
+	      fprintf(stderr, "null file return\n");
+	      continue;
+	    }
+	  else if (file[0] == 0) 
+	    {
+	      fprintf(stderr, "empty file name return\n");
+	      continue;
+	    }
+	  else if (not vj.open(file) ) 
 	    {
 	      perror(file);
 	      continue;

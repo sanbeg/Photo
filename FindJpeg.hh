@@ -28,9 +28,15 @@ public:
 
   std::string get() const
   {
+    fprintf(stderr, "getting %s\n", file_.c_str());
+    
     return file_;
   }
   
+  const char * get_c() const 
+  {
+    return file_.c_str();
+  }
   
   
 };

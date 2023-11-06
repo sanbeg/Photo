@@ -8,9 +8,11 @@ use DirLog;
 our $move;
 our $downcase=1;
 our $prefix; # = 'dsc_';
-our $suffix = 'jpg';
+our $suffix = 'jpg mov nef';
 our $test;
 our $verbose=0;
+
+my $suffix_re;
 
 #my $template="${prefix}%.4i.$suffix";
 
@@ -21,7 +23,9 @@ sub freshen( $$;$ ) {
 
     croak "$dst: $!" unless -d $dst;
     #sort probably not needed, but would screw up badly if it was.
-    my @glob = sort <\Q$dst\E/${prefix}*.$suffix>;
+    my @suffix_list = split / /, $suffix;
+    my $glob_pat = join ' ', map("\Q$dst\E/${prefix}*.$_", @suffix_list);
+    my @glob = sort glob $glob_pat;
 
     unless (defined $self->{from}) {
 	#my $start = shift @glob;
@@ -29,8 +33,9 @@ sub freshen( $$;$ ) {
 	    my $start = pop @glob;
 	    croak "Can't freshen $dst: no files found! ($prefix.$suffix)" 
 	      unless defined $start;
-	    if ($start =~ m:/${prefix}([0-9]+).*\.$suffix:i) {
-		$self->{from} = $1+1;
+	    if ($start =~ m:/${prefix}([0-9]+).*\.$suffix_re:i) {
+	      $self->{from} = $1+1;
+	      warn "freshen from $self->{from}";
 		last;
 	    } else {
 		warn "freshen boundary; skip file: $start";
@@ -40,7 +45,7 @@ sub freshen( $$;$ ) {
 	#check dirlog, to see if the start previously existed.
 	my $dirlog = DirLog->new($dst);
 	for (;;) {
-	  if ($dirlog->existed("$prefix$self->{from}.$suffix")) {
+	  if ($dirlog->existed("$prefix$self->{from}.$suffix_re")) {
 	    ++ $self->{from};
 	  } else {
 	    last;
@@ -53,13 +58,16 @@ sub freshen( $$;$ ) {
 sub init_src ($) {
     my $self = shift;
 
+    my @suffix_list = split / /, $suffix;
+    $suffix_re = '(?:' . join('|', @suffix_list) .')';
+
     unless (defined $prefix) {
 	my %candidates;
 	foreach my $src (@{$self->{folders}}) {
 	    opendir my($dh), $src or die "$src: $!";
 	    warn "try $src";
 	    while (my $file = readdir($dh)) {
-		if ($file =~ m/(.+?)[0-9]+\.$suffix/i) {
+		if ($file =~ m/(.+?)[0-9]+\.$suffix_re/i) {
 		    #warn "prefix=$1" if $verbose>2;
 		    $candidates{$1} ++;
 		}
@@ -69,11 +77,12 @@ sub init_src ($) {
 	my @c = keys %candidates;
 
 	if (@c == 0) {
-	    die "No source prefix found";
+	  die "No source prefix found";
 	} elsif (@c > 1) {
-	    die "Multiple prefixes found: " . join (", ", @c);
+	  die "Multiple prefixes found: " . join (", ", @c);
 	} else {
-	    $prefix = $downcase? lc($c[0]) : $c[0];
+	  $prefix = $downcase? lc($c[0]) : $c[0];
+	  warn "prefix = $prefix";
 	}
     }
 }
@@ -88,68 +97,68 @@ sub downcase( $ ) {
 
 
 sub copy_range( $$;$ ) {
-    my $template="${prefix}%.4i.$suffix";
-    my ($self,$src,$dst,$dirlog) = @_;
-    my ($to,$from) = ($self->{to}, $self->{from});
-    $dst ||= $self->{dst};
-
-    unless (defined($to) and defined($from)) {
-	#my @glob = sort <$src/${prefix}*.$suffix>;
-
-	my $prefix = $downcase ? uc($prefix) : $prefix;
-	my $suffix = $suffix ? uc($suffix) : $suffix;
-
-	
-	my @glob;
-	opendir my($dh), $src or die "$src: $!";
-	@glob = sort grep {m/^${prefix}.+\.$suffix$/i} readdir($dh);
-	closedir $dh;
-
-	die "No photos found in $src" unless @glob;
-	unless (defined $to) {
-	    my $end = $glob[$#glob];
-	    #warn "$end => ${prefix}_([0-9]+)\.$suffix";
-	    $end =~ m:${prefix}([0-9]+)\.$suffix:i;
-	    $to = $1;
-	    die "Where does it end?" unless defined $to;
-	};
-	#this may be broken, should just call freshen()?
-	unless (defined $from) {
-	    my $start = $glob[0];
-	    $start =~ m:${prefix}([0-9]+)\.$suffix:i;
-	    $from = $1;
-	}
-	warn "copy from $from to $to\n" if $verbose;
-	die "no from $prefix $glob[0]" unless defined $from;
+  my ($self,$src,$dst,$dirlog) = @_;
+  my ($to,$from) = ($self->{to}, $self->{from});
+  $dst ||= $self->{dst};
+  
+  unless (defined($to) and defined($from)) {
+    #my @glob = sort <$src/${prefix}*.$suffix>;
+    
+    my @glob;
+    opendir my($dh), $src or die "$src: $!";
+    @glob = sort grep {m/^${prefix}.+\.$suffix_re$/i} readdir($dh);
+    closedir $dh;
+    
+    die "No photos found in $src" unless @glob;
+    unless (defined $to) {
+      my $end = $glob[$#glob];
+      warn "$end => ${prefix}([0-9]+)\.$suffix_re";
+      $end =~ m:${prefix}([0-9]+)\.$suffix_re:i;
+      $to = $1;
+      die "Where does it end?" unless defined $to;
     };
-
-    die "no from" unless defined $from;
-    foreach my $fileno ($from .. $to) {
-	my $file = sprintf $template, $fileno;
-	my $srcf = "$src/".($downcase?uc($file):$file);
-	if (-r $srcf) {
-	    my $base = $downcase ? lc($file) : $file;
-	    my $dstf = "$dst/$base";
-
-	    if (defined($dirlog) and $dirlog->existed($base)) {
-		warn "not replacing $file\n";
-		next;
-	    }
-	    if ($test) {
-		#print "test $file -> $dstf\n";
-	    } elsif ($move) {
-		#move ($srcf, $dstf) or die "$file -> $dstf: $!\n";
-	    } else {
-		warn "copy: $srcf -> $dstf";
-		copy_file ($srcf, $dstf) or die "$file -> $dstf: $!\n";
-	    }
-	    push @{$self->{copied}}, $dstf;
-	    $dirlog->add($base) if defined $dirlog;
-	    warn "copy $file\n" if $verbose>1;
-	} else {
-	    warn "skip $srcf\n" if $verbose>1;
-	}
+    #this may be broken, should just call freshen()?
+    unless (defined $from) {
+      my $start = $glob[0];
+      $start =~ m:${prefix}([0-9]+)\.$suffix_re:i;
+      $from = $1;
     }
+    warn "copy from $from to $to\n" if $verbose;
+    die "no from $prefix $glob[0]" unless defined $from;
+  };
+  
+  die "no from" unless defined $from;
+  my @suffix_list = split ' ', $suffix;
+  foreach my $fileno ($from .. $to) {
+    foreach my $suffix (@suffix_list) {
+      my $template="${prefix}%.4i.$suffix";
+      
+      my $file = sprintf $template, $fileno;
+      my $srcf = "$src/".($downcase?uc($file):$file);
+      if (-r $srcf) {
+	my $base = $downcase ? lc($file) : $file;
+	my $dstf = "$dst/$base";
+	
+	if (defined($dirlog) and $dirlog->existed($base)) {
+	  warn "not replacing $file\n";
+	  next;
+	}
+	if ($test) {
+	  print "test $file -> $dstf\n";
+	} elsif ($move) {
+	  #move ($srcf, $dstf) or die "$file -> $dstf: $!\n";
+	} else {
+	  warn "copy: $srcf -> $dstf";
+	  copy_file ($srcf, $dstf) or die "$file -> $dstf: $!\n";
+	}
+	push @{$self->{copied}}, $dstf;
+	$dirlog->add($base) if defined $dirlog and !$test;
+	warn "copy $file\n" if $verbose>1;
+      } else {
+	warn "skip $srcf\n" if $verbose>1;
+      }
+    }
+  }
 }
 
 sub copy_all($;$) {
@@ -169,11 +178,15 @@ sub copied {
 
 sub rotate( $ ) {
 #do auto rotation
-    my $self = shift;
-    if (defined $self->{copied} and @{$self->{copied}}) {
-	print "rotating images...\n";
-	system 'jhead', '-ft', '-autorot', @{$self->{copied}};
+  my $self = shift;
+  if (defined $self->{copied} and @{$self->{copied}}) {
+    print "rotating images...\n";
+    if ($test) {
+      print "jhead @{$self->{copied}}\n";
+    } else {
+      system 'jhead', '-ft', '-autorot', @{$self->{copied}};
     }
+  }
 };
 
 our $etc_mtab = '/etc/mtab';

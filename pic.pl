@@ -75,6 +75,7 @@ my ($roll,$maxr) = CamRoll::find($pic);
 CamRoll::kill($pic,$roll) if defined $roll;
 
 if (defined $opt{from}) {
+  warn "xxx";
     $pic->freshen($dst, $opt{from});
 } elsif (defined $freshen) {
     my $refresh = ($freshen eq '') ? $dst : $freshen;
@@ -86,7 +87,7 @@ if (defined $opt{from}) {
 	mkdir $dst or die "$dst: $!";
     }
 
-    warn $pic->{from};
+    warn "copy starting from #$pic->{from}";
 
     eval {
       my $dr=DetectRoll->new($refresh);

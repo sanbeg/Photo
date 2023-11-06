@@ -42,11 +42,13 @@ sub has_roll {
     &open_dir;
     my $self=shift;
 
+    my @suffix_list = split / /, $suffix;
+    my $suffix_re = '(?:' . join('|', @suffix_list) .')';
 
     my ($min,$max);
     my ($minf,$maxf);
     while (my $fn = readdir $self->{DH}) {
-	next unless $fn =~ /([0-9]+).*\Q$suffix/i;
+	next unless $fn =~ /([0-9]+).*\Q$suffix_re/i;
 	if (!defined($min) or $min > $1) {
 	    $minf=$fn;
 	    $min=$1;
@@ -72,9 +74,12 @@ sub find_roll {
 
     my ($min,$max, $minf, $maxf);
 
+    my @suffix_list = split / /, $suffix;
+    my $suffix_re = '(?:' . join('|', @suffix_list) .')';
+
     while (my $fn = readdir $self->{DH}) {
       #FIXME - prefix unitialised when creating new dir.
-	next unless $fn =~ /$prefix([0-9]+).*\Q$suffix/i; #bogus paths will loop
+	next unless $fn =~ /$prefix([0-9]+).*\Q$suffix_re/i; #bogus paths will loop
 	$filenames{int($1)} = $fn;
 	if (!defined($min) or $min > $1) {
 	    $min=$1;

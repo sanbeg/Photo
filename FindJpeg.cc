@@ -3,6 +3,9 @@
 #include <cstring>
 #include <sys/stat.h>
 
+static const bool debug=0;
+
+
 bool FindJpeg::scan () 
 {
   struct dirent entry;
@@ -14,6 +17,10 @@ bool FindJpeg::scan ()
       
       if (de->d_name[0] == '.')
 	continue;
+
+      if (debug) fprintf(stderr, "scanning: %s\n", de->d_name);
+      
+      
 #ifdef _DIRENT_HAVE_D_TYPE
       switch (de->d_type) 
 	{
@@ -22,11 +29,15 @@ bool FindJpeg::scan ()
 	  break;
 	case DT_REG:
 	  {
+	    if (debug) fprintf(stderr, "reg file\n");
+	    
 	    int len = strlen(de->d_name);
 	    if (len < 5) break;
 	    const char * ext = de->d_name + len - 4;
 	    if (strncasecmp(ext,".jpg",4)) break;
 	    file_ = dir_ + "/" + de->d_name;
+	    if (debug) fprintf(stderr, "dir=%s, name=%s, file='%s'\n", dir_.c_str(), de->d_name, file_.c_str());
+	    
 	    return true;
 	  }
 	  
